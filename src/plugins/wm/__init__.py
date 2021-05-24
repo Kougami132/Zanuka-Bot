@@ -15,7 +15,7 @@ wm = on_command("wm", aliases={"WM"})
 
 @wm.handle()
 async def _(bot: Bot, event: Event):
-    # try:
+    try:
         item = event.get_message().__str__().strip()
         if item == "":
             await wm.send("参数不能为空!")
@@ -53,7 +53,7 @@ async def _(bot: Bot, event: Event):
         #筛选并排序
         rank = []
         for i in data["payload"]["orders"]:
-            if not i["visible"] or i["user"]["status"] != "ingame" or i["order_type"] != "sell" or i["mod_rank"] < mod_rank:
+            if not i["visible"] or i["user"]["status"] != "ingame" or i["order_type"] != "sell" or "mod_rank" in i.keys() and i["mod_rank"] < mod_rank:
                 continue
             if not len(rank):
                 rank.append(i)
@@ -130,6 +130,6 @@ async def _(bot: Bot, event: Event):
             nodes.append(copy.deepcopy(node))
         
         await bot.send_group_forward_msg(group_id=event.group_id, messages=nodes)
-    # except Exception as e:
-    #     print(e)
-    #     await wm.finish("获取失败,请重试!")
+    except Exception as e:
+        print(e)
+        await wm.finish("获取失败,请重试!")
