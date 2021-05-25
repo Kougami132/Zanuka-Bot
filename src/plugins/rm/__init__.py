@@ -45,7 +45,7 @@ async def _(bot: Bot, event: Event):
         await rm.send("正在查询 [{0}] 紫卡价格,请稍等".format(WF_Dict[index]["zh"]))
         response = requests.get(
             url="https://riven.market/_modules/riven/showrivens.php?platform=PC&limit={1}&onlinefirst=true&polarity=all&rank=all&mastery=16&weapon={0}&stats=Any&neg=all&price=99999&rerolls=-1&sort=price&direction=ASC".format(
-                WF_Dict[index]["en"], 10))
+                WF_Dict[index]["en"].replace(" ", "_"), 10))
         html = response.text
         bs = BeautifulSoup(html, "html.parser")
         rivens = bs.find_all("div", class_="riven")
@@ -59,7 +59,7 @@ async def _(bot: Bot, event: Event):
             }
         }
         node["data"]["content"] = "查价武器: {0} ({1})\n数据来源: https://riven.market/list/PC/{2}".format(
-            WF_Dict[index]["zh"], WF_Dict[index]["en"], WF_Dict[index]["en"])
+            WF_Dict[index]["zh"], WF_Dict[index]["en"], WF_Dict[index]["en"].replace(" ", "_"))
         nodes.append(copy.deepcopy(node))
 
         #简略

@@ -1,12 +1,9 @@
 from nonebot import on_command
 import nonebot
-from nonebot.adapters.cqhttp.event import Sender
 from nonebot.typing import T_State
 from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.cqhttp import MessageSegment
 import os
-import base64
-
 from nonebot import get_driver
 
 from .config import Config
@@ -18,8 +15,14 @@ test = on_command("test")
 
 @test.handle()
 async def _(bot: Bot, event: Event, state: T_State):
-    print(nonebot.get_bots().copy().popitem()[1])
-    print(nonebot.get_bots().copy().popitem()[1])
+    print(os.getcwd())
+    # await test.send(MessageSegment.record(file="miko-daily-023.mp3"))
+    # with open("./src/plugins/test/data/miko-daily-023.mp3", "rb") as file:
+    #     data = b64encode(file.read()).decode()
+    #     await test.send(f"[CQ:record,file=base64://{data}]")
+    await test.send(MessageSegment.record("file:///{0}/data/miko-daily-023.mp3".format(os.path.abspath(os.path.dirname(__file__)))))
+    # print(await bot.call_api("can_send_record"))
+    # print(nonebot.get_bots().copy().popitem()[1])
     # await nonebot.get_bots().popitem()[1].call_api("send_group_msg", **{
     #     "message": "hello world",
     #     "group_id": "1033704948"

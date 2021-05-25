@@ -1,3 +1,4 @@
+import os
 from nonebot.plugin import on_notice, on_message, require
 from nonebot.adapters.cqhttp import GroupRecallNoticeEvent, Bot, Message, FriendRecallNoticeEvent, PokeNotifyEvent, \
     MessageEvent, MessageSegment
@@ -12,13 +13,13 @@ help = on_message(rule=to_me())
 
 @poke.handle()
 async def _(bot: Bot, event: PokeNotifyEvent):
-    msg = choice([
-        "你再戳！", "？再戳试试？", "别戳了别戳了再戳就坏了555", "我爪巴爪巴，球球别再戳了", "你戳你🐎呢？！",
-        "那...那里...那里不能戳...绝对...", "(。´・ω・)ん?", "有事恁叫我，别天天一个劲戳戳戳！", "欸很烦欸！你戳🔨呢",
-        "?", "差不多得了😅", "欺负咱这好吗？这不好", "我希望你耗子尾汁"
-    ])
-
-    await poke.finish(msg, at_sender=True)
+    # msg = choice([
+    #     "你再戳！", "？再戳试试？", "别戳了别戳了再戳就坏了555", "我爪巴爪巴，球球别再戳了", "你戳你🐎呢？！",
+    #     "那...那里...那里不能戳...绝对...", "(。´・ω・)ん?", "有事恁叫我，别天天一个劲戳戳戳！", "欸很烦欸！你戳🔨呢",
+    #     "?", "差不多得了😅", "欺负咱这好吗？这不好", "我希望你耗子尾汁"
+    # ])
+    file = "file:///{0}/src/data/voices/miko-daily-023.mp3".format(os.getcwd())
+    await poke.finish(MessageSegment.record(file))
 
 @recall.handle()
 async def _(bot: Bot, event: GroupRecallNoticeEvent):
@@ -40,7 +41,7 @@ async def _(bot: Bot, event: MessageEvent):
 
 @help.handle()
 async def _(bot: Bot, event: GroupMessageEvent):
-    result = "ZANUKA 4.0 https://github.com/Kougami132/ZanukaBot"
+    result = "ZANUKA 4.0"
     result += "\n信息: 警报 | 入侵 | 裂隙 | 突击 | 仲裁 | 电波 | 特价 | 奸商"
     result += "\n时间: 地球时间 | 平原时间 | 山谷时间 | 幽都时间 | 紫卡时间"
     result += "\n查价: wm | rm"
@@ -49,4 +50,5 @@ async def _(bot: Bot, event: GroupMessageEvent):
     keywords = require("monitor").keywords
     for i in keywords:
         result += " [{0}]".format(i)
+    result += "\n项目地址: Kougami132/ZanukaBot"
     await help.send(result)
