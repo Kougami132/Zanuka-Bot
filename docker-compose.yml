@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  go-cqhttp:
+    build: ./go-cqhttp
+    volumes:
+      - ./data-go-cqhttp:/data:delegated # 用于保存 gocqhttp 相关文件，请复制 config.yml 等文件到此
+    tty: true
+    stdin_open: true
+    environment:
+      - TZ=Asia/Shanghai
+    depends_on:
+      - nonebot2
+
+  nonebot2:
+    build: ./nonebot2 # 构建nonebot执行环境，Dockerfile见下面的例子
+    volumes:
+      - ./data-nonebot2:/usr/src/app/src/data:delegated
+      # - ./nonebot2/src/plugins:/usr/src/app/src/plugins:ro # debug
+    expose:
+      - "8080"
+    environment:
+      - TZ=Asia/Shanghai
+
+networks:
+  default:
+    name: network-zanuka

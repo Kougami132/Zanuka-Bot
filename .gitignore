@@ -1,0 +1,13 @@
+__pycache__/
+
+# go-cqhttp账号信息
+/go-cqhttp/data/
+/go-cqhttp/logs/
+/go-cqhttp/config.yml
+/go-cqhttp/device.json
+/go-cqhttp/session.token
+/data-go-cqhttp/
+
+# nonebot数据
+/nonebot2/src/data/
+/data-nonebot2/
