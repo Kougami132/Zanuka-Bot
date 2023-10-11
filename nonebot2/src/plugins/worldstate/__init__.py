@@ -15,7 +15,7 @@ dailyDeals = on_regex(r"^((今|每)日)?特价(商品)?$")
 voidTrader = on_regex(r"^(奸商|虚空商人)(商品)?$")
 nightwave = on_regex(r"^电波(任务)?$")
 earthCycle = on_regex(r"^地球时间$")
-cetusCycle = on_regex(r"^((地球)?平原|夜灵|希图斯)时间$")
+cetusCycle = on_regex(r"^((地球)?((夜灵)?平原)|希图斯)时间$")
 vallisCycle = on_regex(r"^((奥布)?山谷|金星平原)(时间|温度|气候)$")
 cambionCycle = on_regex(r"^((殁世)?幽都|火卫二平原)时间$")
 
@@ -23,12 +23,7 @@ cambionCycle = on_regex(r"^((殁世)?幽都|火卫二平原)时间$")
 @alerts.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("alerts")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("alerts")
         if data == []:
             await bot.send(event, MessageSegment.reply(event.message_id) + "没有警报捏")
             return
@@ -56,17 +51,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @invasions.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("invasions")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("invasions")
         if data == []:
             await bot.send(event, MessageSegment.reply(event.message_id) + "没有入侵捏")
             return
@@ -96,25 +86,22 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @fissures.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("fissures")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("fissures")
         if data == []:
             await bot.send(event, MessageSegment.reply(event.message_id) + "没有裂隙捏")
             return
         nodes = []
+
+        normal = ["普通裂隙："]
         for tier in range(5):
             content = "————{0}————".format(("古纪", "前纪", "中纪", "后纪", "安魂")[tier])
             for i in data:
-                if not i["active"]:
+                if not i["active"] or i["isStorm"] or i["isHard"]:
                     continue
                 if i["tierNum"] == tier + 1:
                     #节点
@@ -126,7 +113,47 @@ async def _(bot: Bot, event: MessageEvent):
                     timeLeft = utcTime + timedelta(hours=8) - datetime.now()
                     content += "\n—剩余时间: " + count_down(timeLeft)
                     content += "\n——————————"
-            nodes.append(content)
+            normal.append(content)
+        nodes.append(normal)
+
+        storm = ["九重天裂隙："]
+        for tier in range(5):
+            content = "————{0}————".format(("古纪", "前纪", "中纪", "后纪", "安魂")[tier])
+            for i in data:
+                if not i["active"] or not i["isStorm"]:
+                    continue
+                if i["tierNum"] == tier + 1:
+                    #节点
+                    content += f"\n—节点: {i['node']}"
+                    #模式
+                    content += f"\n—模式: {i['missionType']} ({i['enemy']})"
+                    #剩余时间
+                    utcTime = datetime.strptime(i["expiry"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    timeLeft = utcTime + timedelta(hours=8) - datetime.now()
+                    content += "\n—剩余时间: " + count_down(timeLeft)
+                    content += "\n——————————"
+            storm.append(content)
+        nodes.append(storm)
+
+        hard = ["钢铁裂隙："]
+        for tier in range(5):
+            content = "————{0}————".format(("古纪", "前纪", "中纪", "后纪", "安魂")[tier])
+            for i in data:
+                if not i["active"] or not i["isHard"]:
+                    continue
+                if i["tierNum"] == tier + 1:
+                    #节点
+                    content += f"\n—节点: {i['node']}"
+                    #模式
+                    content += f"\n—模式: {i['missionType']} ({i['enemy']})"
+                    #剩余时间
+                    utcTime = datetime.strptime(i["expiry"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    timeLeft = utcTime + timedelta(hours=8) - datetime.now()
+                    content += "\n—剩余时间: " + count_down(timeLeft)
+                    content += "\n——————————"
+            hard.append(content)
+        nodes.append(hard)
+
         messages = forward_msg(nodes, bot.self_id, "ZANUKA")
         await bot.send_group_forward_msg(group_id=event.group_id, messages=messages)
     except ActionFailed:
@@ -134,17 +161,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @sortie.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("sortie")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("sortie")
         result = "今日突击如下:"
         result += "\nBOSS: {0} ({1})".format(data["boss"], data["faction"])
         result += "\n——————————"
@@ -163,17 +185,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @arbitration.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("arbitration")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("arbitration")
         result = "仲裁信息如下:"
         #节点、星球
         result += f"\n节点: {data['node']}"
@@ -190,17 +207,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @dailyDeals.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("dailyDeals")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("dailyDeals")
         result = "今日特价商品如下:\n——————————"
         for i in data:
             #商品、价格、数量
@@ -218,17 +230,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @voidTrader.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("voidTrader")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("voidTrader")
         if not data["active"]:
             content = f"距离 {data['character']} 到达 {data['location']} 中继站还有 "
             utcTime = datetime.strptime(data["activation"], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -249,17 +256,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @nightwave.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("nightwave")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("nightwave")
         nodes = []
         for i in data["activeChallenges"]:
             content = "——————————"
@@ -283,17 +285,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @earthCycle.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("earthCycle")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("earthCycle")
         result = "Zanuka为恁报时:"
         result += "\n地球状态: 白天" if data["isDay"] else "\n地球状态: 夜晚"
         utcTime = datetime.strptime(data["expiry"], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -305,17 +302,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @cetusCycle.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("cetusCycle")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("cetusCycle")
         result = "Zanuka为恁报时:"
         result += "\n平原状态: 白天" if data["isDay"] else "\n平原状态: 夜晚"
         utcTime = datetime.strptime(data["expiry"], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -327,17 +319,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @vallisCycle.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("vallisCycle")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("vallisCycle")
         result = "Zanuka为恁报时:"
         result += "\n山谷状态: 温暖" if data["isWarm"] else "\n山谷状态: 寒冷"
         utcTime = datetime.strptime(data["expiry"], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -349,17 +336,12 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')
 
 @cambionCycle.handle()
 async def _(bot: Bot, event: MessageEvent):
     try:
-        try:
-            res = await queryWorldstate("cambionCycle")
-        except:
-            await bot.send(event, MessageSegment.reply(event.message_id) + f"接口出错, 提示: {res[1]}")
-            return
-        data = res
+        data = await queryWorldstate("cambionCycle")
         result = "Zanuka为恁报时:"
         result += f"\n幽都状态: {str(data['active']).upper()}"
         utcTime = datetime.strptime(data["expiry"], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -371,4 +353,4 @@ async def _(bot: Bot, event: MessageEvent):
     except FileNotFoundError:
         await bot.send(event, MessageSegment.reply(event.message_id) + f'素材丢失: {e}')
     except Exception as e:
-        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{e}')
+        await bot.send(event, MessageSegment.reply(event.message_id) + f'程序出错：{type(e)}, {e}')

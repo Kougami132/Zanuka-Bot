@@ -26,12 +26,7 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
             return
         # 请求数据
         await bot.send(event, f"正在查询 [{riven['zh_name']}] 紫卡价格,请稍等")
-        try:
-            res = await queryRivenMarket(riven["url_name"])
-        except Exception as e:
-            await send_error(f"接口出错, 提示: {type(e)}")
-            return
-        data = res
+        data = await queryRivenMarket(riven["url_name"])
         # 处理消息
         nodes = [f"查价武器: {riven['zh_name']} ({riven['item_name']})\n数据来源: https://riven.market/list/PC/{riven['url_name']}"]
         content = "".center(30, "—")
@@ -51,12 +46,9 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
             nodes.append(content)
         messages = forward_msg(nodes, bot.self_id, "ZANUKA")
         await bot.send_group_forward_msg(group_id=event.group_id, messages=messages)
-
-
-        
     except ActionFailed as e:
         await send_error("账号可能被风控, 请重试!")
     except FileNotFoundError as e:
         await send_error(f"素材丢失: {e}")
     except Exception as e:
-        await send_error(f"程序出错：{e}")
+        await send_error(f"程序出错：{type(e)}, {e}")

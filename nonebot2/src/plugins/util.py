@@ -25,15 +25,10 @@ def md5(text: str) -> str:
 # 转换网络图片为 Image 对象
 async def pic_to_image(url: str):
     async with httpx.AsyncClient() as client:
-        try:
-            res = await client.get(url, timeout=20.0)
-            userImage = Image.open(BytesIO(res.content))
-        except Exception as e:
-            print(f"文件下载出错: {e}")
-            return None
-
-    # 返回 URL 图片的 Image 对象
-    return userImage
+        res = await client.get(url, timeout=20.0)
+        bytes = BytesIO(res.read())
+        image = Image.open(bytes)
+    return image
 
 # 快速粘贴透明图片
 def alpha_paste(image1: Image, image2: Image, position=(0, 0)):
@@ -49,6 +44,28 @@ def get_assets_path():
 # 获取数据存储目录
 def get_data_path():
     return "./src/data/"
+
+# 读整节数据
+def get_configs(name: str, section: str):
+    path = get_data_path() + "config/"
+    cp = configparser.RawConfigParser()
+    
+    # 检查文件夹是否存在
+    if not os.path.isdir(path):
+        return ""
+    
+    file = path + name + ".ini"
+    # 检查文件是否存在
+    if not os.path.isfile(file):
+        return ""
+    
+    cp.read(file)
+    # 检查section是否存在
+    if not cp.has_section(section):
+        return ""
+    
+    items = cp.items(section)
+    return items
 
 # 读取数据
 def get_config(name: str, section: str, item: str) -> str:

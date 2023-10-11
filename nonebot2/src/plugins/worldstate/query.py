@@ -14,6 +14,7 @@ async def queryWorldstate(node: str):
     }
     # 发送请求
     async with AsyncClient() as client:
-        res = await client.get(url=url, params=params, headers=headers, timeout=10)
+        res = await client.get(url=url, params=params, headers=headers, timeout=10, follow_redirects=True)
+        print(res.content)
         resJson = res.json()
     return resJson

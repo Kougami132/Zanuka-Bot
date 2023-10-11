@@ -41,11 +41,7 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
             await bot.send(event, f"正在查询 [{item['zh_name']} ({mod_rank} 级)] 价格, 请稍等")
         else:
             await bot.send(event, f"正在查询 [{item['zh_name']}] 价格, 请稍等")
-        try:
-            res = await queryWarframeMarket(item["url_name"])
-        except Exception as e:
-            await send_error(f"接口出错, 提示: {type(e)}")
-            return
+        res = await queryWarframeMarket(item["url_name"])
         data = res["payload"]["orders"]
         # 筛选
         data = [i for i in data if 
@@ -102,4 +98,4 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
     except FileNotFoundError as e:
         await send_error(f"素材丢失: {e}")
     except Exception as e:
-        await send_error(f"程序出错：{e}")
+        await send_error(f"程序出错：{type(e)}, {e}")

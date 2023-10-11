@@ -1,4 +1,4 @@
-from nonebot import get_bot, get_bots, on_regex, on_command, require
+from nonebot import get_bot, on_regex, on_command, require
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
